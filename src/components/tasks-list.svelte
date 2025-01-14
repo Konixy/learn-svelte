@@ -39,13 +39,13 @@
 			>
 				<input
 					type="checkbox"
-					id={task.id}
+					id={String(task.id)}
 					checked={task.done}
 					onchange={() => toggleDone(task)}
 					class="h-4 w-4 rounded-lg border-slate-600 bg-slate-700 text-blue-600 ring-offset-slate-800 focus:ring-2 focus:ring-blue-600"
 				/>
 				<label
-					for={task.id}
+					for={String(task.id)}
 					class="w-full cursor-pointer font-semibold {task.done && 'text-slate-300 line-through'}"
 				>
 					{task.title}

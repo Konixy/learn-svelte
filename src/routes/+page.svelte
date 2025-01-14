@@ -1,79 +1,56 @@
 <script lang="ts">
-	import { isActionFailure } from '@sveltejs/kit';
-	import Header from './Header.svelte';
+	import TasksForm from '../components/tasks-form.svelte';
+	import TasksList from '../components/tasks-list.svelte';
+	import type { Filter, Task } from '../lib/types';
 
-	let formState = $state({
-		answers: {
-			name: '',
-			birthday: '',
-			color: ''
-		},
-		step: 0,
-		error: ''
+	let id = 0;
+
+	let tasks = $state<Task[]>([]);
+	let totalDone = $derived(tasks.filter((e) => e.done).length);
+	let currentFilter = $state<Filter>('all');
+	let filteredTasks = $derived.by(() => {
+		switch (currentFilter) {
+			case 'all':
+				return tasks;
+			case 'todo':
+				return tasks.filter((task) => !task.done);
+			case 'done':
+				return tasks.filter((task) => task.done);
+		}
+		return tasks;
 	});
 
-	type Question = {
-		question: string;
-		id: keyof typeof formState.answers;
-		type: 'text' | 'date' | 'color';
-		isLast?: boolean;
-	};
+	function addTask(newTask: string) {
+		tasks.push({
+			id: id++,
+			title: newTask,
+			done: false
+		});
+	}
 
-	const questions: Question[] = [
-		{
-			question: "What's your name?",
-			id: 'name',
-			type: 'text'
-		},
-		{
-			question: 'When were you born?',
-			id: 'birthday',
-			type: 'date'
-		},
-		{
-			question: "What's your favorite color?",
-			id: 'color',
-			type: 'color',
-			isLast: true
-		}
-	];
+	function toggleDone(task: Task) {
+		task.done = !task.done;
+	}
 
-	function nextStep(id: keyof typeof formState.answers) {
-		if (formState.answers[id] !== '') {
-			formState.step += 1;
-			formState.error = '';
-		} else {
-			formState.error = 'Please fill out the form input';
-		}
+	function removeTask(id: number) {
+		const index = tasks.findIndex((task) => task.id === id);
+		tasks.splice(index, 1);
 	}
 </script>
 
-<Header name={formState.answers.name} />
-
-<main class="flex flex-col">
-	{#if formState.step >= questions.length}
-		<div>Thank you for choosing us!</div>
+<main class="m-10">
+	<div class="mb-10 flex items-center justify-center text-4xl font-semibold">Task App</div>
+	<TasksForm {addTask} />
+	<div class="mx-1 mt-2 text-sm text-slate-300">{totalDone} / {tasks.length} tasks completed</div>
+	{#if tasks.length}
+		<TasksList
+			tasks={filteredTasks}
+			{toggleDone}
+			{removeTask}
+			{currentFilter}
+			setCurrentFilter={(f) => (currentFilter = f)}
+		/>
 	{:else}
-		<div>Step {formState.step + 1}</div>
-	{/if}
-
-	{#each questions as question, i (question.id)}
-		{#if formState.step === i}
-			{@render formStep(question)}
-		{/if}
-	{/each}
-
-	{#if formState.error}
-		<div class="text-red-500">{formState.error}</div>
+		<div class="mt-4 flex justify-center">Add a task to get started</div>
 	{/if}
 </main>
-
-{#snippet formStep({ question, id, type, isLast }: Question)}
-	<article>
-		<div>
-			<label for={id}>{question}</label>
-			<input {type} {id} bind:value={formState.answers[id]} />
-		</div>
-		<button onclick={() => nextStep(id)}>{isLast ? 'Finish' : 'Next'}</button>
-	</article>
-{/snippet}

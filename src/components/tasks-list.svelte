@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { fade } from 'svelte/transition';
+	import { fly } from 'svelte/transition';
 	import type { Task, Filter } from '../lib/types';
 
 	let {
@@ -35,7 +35,7 @@
 		{#each tasks as task}
 			<article
 				class="flex flex-row items-center gap-4 rounded-lg border border-slate-700 bg-slate-900 p-4"
-				transition:fade
+				in:fly
 			>
 				<input
 					type="checkbox"
